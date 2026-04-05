@@ -19,6 +19,11 @@ function branchExists(name) {
   return branches.includes(name);
 }
 
+function tagExists(name) {
+  const tags = runQuiet('git tag -l ' + name);
+  return tags.includes(name);
+}
+
 function main() {
   const branch = runQuiet('git branch --show-current');
 
@@ -71,6 +76,10 @@ function main() {
 
   // 3. 打 tag
   console.log(`\n  [4/5] 打 tag v${version}...`);
+  if (tagExists(`v${version}`)) {
+    run(`git tag -d v${version}`);
+    console.log(`  🔄 已删除旧 tag v${version}`);
+  }
   run(`git tag -a v${version} -m "release: v${version}"`);
 
   // 4. 推送
