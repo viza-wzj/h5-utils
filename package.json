@@ -1,0 +1,71 @@
+{
+  "name": "@i17hush/h5-utils",
+  "publishConfig": {
+    "access": "public"
+  },
+  "version": "1.2.0",
+  "description": "H5常用工具库，封装前端高频方法，采用适配器模式支持浏览器与Taro多端切换",
+  "keywords": [
+    "utils",
+    "h5",
+    "taro",
+    "browser",
+    "storage",
+    "clipboard",
+    "format",
+    "validator",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.cjs.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./adapter/taro": {
+      "import": "./dist/adapter/taro.esm.js",
+      "require": "./dist/adapter/taro.cjs.js",
+      "types": "./dist/adapter/taro.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "peerDependencies": {
+    "@tarojs/taro": ">=3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@tarojs/taro": {
+      "optional": true
+    }
+  },
+  "scripts": {
+    "build": "rollup -c",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build",
+    "release": "node scripts/release.mjs",
+    "release:patch": "node scripts/release.mjs patch",
+    "release:minor": "node scripts/release.mjs minor",
+    "release:major": "node scripts/release.mjs major"
+  },
+  "devDependencies": {
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@rollup/rollup-darwin-arm64": "^4.60.1",
+    "prettier": "^3.8.1",
+    "rollup": "^4.18.0",
+    "rollup-plugin-dts": "^6.1.1",
+    "tslib": "^2.6.3",
+    "typescript": "^5.5.0"
+  }
+}
