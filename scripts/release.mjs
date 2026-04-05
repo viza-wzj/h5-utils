@@ -120,7 +120,7 @@ async function main() {
 
   // 提交版本号变更
   run('git add package.json package-lock.json CHANGELOG.md');
-  run(`git commit -m "release: v${nextVer}"`);
+  run(`git commit -m "release: v${nextVer}\n\n${tagMsg}"`);
 
   // [6/7] 发布
   console.log('\n  [6/7] 发布到 npm...');
