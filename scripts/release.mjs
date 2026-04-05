@@ -119,7 +119,7 @@ async function main() {
   execSync(`npm version ${type} --no-git-tag-version`, { stdio: 'inherit' });
 
   // 提交版本号变更
-  run('git add package.json CHANGELOG.md');
+  run('git add package.json package-lock.json CHANGELOG.md');
   run(`git commit -m "release: v${nextVer}"`);
 
   // [6/7] 发布
