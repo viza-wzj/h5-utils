@@ -2,10 +2,25 @@ import { execSync } from 'child_process';
 import { readFileSync } from 'fs';
 import { createInterface } from 'readline';
 
-const pkg = JSON.parse(readFileSync('package.json', 'utf-8'));
-const current = pkg.version;
-
 const [, , arg] = process.argv;
+
+function run(cmd) {
+  execSync(cmd, { stdio: 'inherit' });
+}
+
+function runQuiet(cmd) {
+  return execSync(cmd, { encoding: 'utf-8' }).trim();
+}
+
+function branchExists(name) {
+  const branches = runQuiet('git branch --list ' + name);
+  return branches.includes(name);
+}
+
+function tagExists(name) {
+  const tags = runQuiet('git tag -l ' + name);
+  return tags.includes(name);
+}
 
 function bump(ver, idx) {
   const parts = ver.split('.').map(Number);
@@ -13,12 +28,6 @@ function bump(ver, idx) {
   for (let i = idx + 1; i < parts.length; i++) parts[i] = 0;
   return parts.join('.');
 }
-
-const options = {
-  patch: bump(current, 2),
-  minor: bump(current, 1),
-  major: bump(current, 0),
-};
 
 async function prompt() {
   const rl = createInterface({ input: process.stdin, output: process.stdout });
@@ -33,7 +42,18 @@ async function prompt() {
 }
 
 async function main() {
+  // 读取当前版本
+  let pkg = JSON.parse(readFileSync('package.json', 'utf-8'));
+  const current = pkg.version;
+
+  // 选择版本号
   let type;
+  const options = {
+    patch: bump(current, 2),
+    minor: bump(current, 1),
+    major: bump(current, 0),
+  };
+
   if (arg && options[arg]) {
     type = arg;
   } else {
@@ -52,29 +72,95 @@ async function main() {
   }
 
   const nextVer = options[type];
-  console.log(`\n  ${current} → ${nextVer} (${type})\n`);
+  const srcBranch = runQuiet('git branch --show-current');
+  const hasRemote = runQuiet('git remote').length > 0;
 
-  // 1. 格式化代码
-  console.log('  [1/4] 格式化代码...');
-  execSync('npx prettier --write "src/**/*.ts"', { stdio: 'inherit' });
+  console.log(`\n  ${current} → ${nextVer} (${type})`);
+  console.log(`  当前分支: ${srcBranch}\n`);
 
-  // 2. 构建
-  console.log('\n  [2/4] 构建项目...');
-  execSync('npm run build', { stdio: 'inherit' });
+  // [1/6] 提交未保存更改
+  const status = runQuiet('git status --porcelain');
+  if (status) {
+    console.log('  [1/6] 提交未保存更改...');
+    run('git add -A');
+    const msg = arg || `chore: bump ${nextVer}`;
+    run(`git commit -m "${msg}"`);
+    console.log('  ✅ 已提交\n');
+  } else {
+    console.log('  [1/6] 无未保存更改');
+  }
 
-  // 3. 更新版本号
-  console.log(`\n  [3/4] 更新版本号 ${nextVer}...`);
+  // [2/6] 格式化代码
+  console.log('\n  [2/6] 格式化代码...');
+  run('npx prettier --write "src/**/*.ts"');
+
+  // [3/6] 构建
+  console.log('\n  [3/6] 构建项目...');
+  run('npm run build');
+
+  // [4/6] 更新版本号
+  console.log(`\n  [4/6] 更新版本号 ${nextVer}...`);
   execSync(`npm version ${type} --no-git-tag-version`, { stdio: 'inherit' });
 
-  // 4. 发布
-  console.log('\n  [4/4] 发布到 npm...');
+  // 提交版本号变更
+  run('git add package.json');
+  run(`git commit -m "release: v${nextVer}"`);
+
+  // [5/6] 发布
+  console.log('\n  [5/6] 发布到 npm...');
   try {
     execSync('npm publish --access public', { stdio: 'inherit' });
-    console.log(`\n  ✅ 发布成功! @i17hush/h5-utils@${nextVer}\n`);
+    console.log(`\n  ✅ 发布成功! @i17hush/h5-utils@${nextVer}`);
   } catch {
-    console.log('\n  ❌ 发布失败\n');
+    console.log('\n  ❌ 发布失败，回退版本号...');
+    execSync(`npm version ${current} --no-git-tag-version`, { stdio: 'inherit' });
+    run('git add package.json');
+    run(`git commit -m "revert: version back to ${current}"`);
     process.exit(1);
   }
+
+  // [6/6] 合并到 main + 打 tag
+  console.log('\n  [6/6] 合并到 main 并打 tag...');
+  if (!branchExists('main')) {
+    run('git checkout -b main');
+    run(`git checkout ${srcBranch}`);
+  }
+
+  run('git checkout main');
+
+  try {
+    run(`git merge ${srcBranch} --no-ff -m "merge: ${srcBranch} → main v${nextVer}"`);
+  } catch {
+    console.error('\n  ❌ 合并冲突! 请手动解决:');
+    console.error('     git add . && git commit');
+    process.exit(1);
+  }
+
+  // 打 tag
+  if (tagExists(`v${nextVer}`)) {
+    run(`git tag -d v${nextVer}`);
+  }
+  run(`git tag -a v${nextVer} -m "release: v${nextVer}"`);
+
+  // 推送
+  if (hasRemote) {
+    try {
+      run('git push origin main --tags');
+      run(`git push origin ${srcBranch}`);
+    } catch {
+      console.error('\n  ⚠️  推送失败，请手动推送:');
+      console.error('     git push origin main --tags');
+      console.error(`     git push origin ${srcBranch}`);
+    }
+  }
+
+  // 切回原分支
+  run(`git checkout ${srcBranch}`);
+
+  console.log(`\n  ✅ 全部完成!`);
+  console.log(`     发布: @i17hush/h5-utils@${nextVer}`);
+  console.log(`     main: 已合并并打 tag v${nextVer}`);
+  console.log(`     当前: 已切回 ${srcBranch}\n`);
 }
 
 main();
