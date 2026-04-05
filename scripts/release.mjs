@@ -145,7 +145,7 @@ async function main() {
   run('git checkout main');
 
   try {
-    run(`git merge ${srcBranch} --no-ff -m "merge: ${srcBranch} → main v${nextVer}"`);
+    run(`git merge ${srcBranch} --no-ff -m "merge: ${srcBranch} → main v${nextVer}" -m "${tagMsg}"`);
   } catch {
     console.error('\n  ❌ 合并冲突! 请手动解决:');
     console.error('     git add . && git commit');
