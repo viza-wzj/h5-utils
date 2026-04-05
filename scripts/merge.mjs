@@ -1,6 +1,5 @@
 import { execSync } from 'child_process';
 import { readFileSync } from 'fs';
-import { createInterface } from 'readline';
 
 const pkg = JSON.parse(readFileSync('package.json', 'utf-8'));
 const version = pkg.version;
@@ -15,26 +14,20 @@ function runQuiet(cmd) {
   return execSync(cmd, { encoding: 'utf-8' }).trim();
 }
 
-async function prompt(message) {
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
-  return new Promise((resolve) => {
-    rl.question(message, (answer) => {
-      rl.close();
-      resolve(answer.trim());
-    });
-  });
+function branchExists(name) {
+  const branches = runQuiet('git branch --list ' + name);
+  return branches.includes(name);
 }
 
-async function main() {
+function main() {
   const branch = runQuiet('git branch --show-current');
 
-  // 必须在 develop 分支上执行
   if (branch !== 'develop') {
-    console.error(`\n  ❌ 请在 develop 分支上执行此命令，当前分支: ${branch}\n`);
+    console.error(`\n  ❌ 请在 develop 分支上执行，当前分支: ${branch}\n`);
     process.exit(1);
   }
 
-  // 检查 develop 是否有未提交的更改
+  // 检查未提交更改
   const status = runQuiet('git status --porcelain');
   if (status) {
     console.log('\n  ⚠️  有未提交的更改，先提交:');
@@ -44,7 +37,6 @@ async function main() {
     console.log('  ✅ 已提交\n');
   }
 
-  // 检查是否有远程仓库
   const hasRemote = runQuiet('git remote').length > 0;
 
   console.log(`  当前版本: v${version}`);
@@ -58,14 +50,20 @@ async function main() {
   console.log('\n  [2/5] 构建项目...');
   run('npm run build');
 
-  // 2. 切到 main，合并 develop
+  // 2. 确保 main 分支存在
   console.log('\n  [3/5] 合并 develop → main...');
+  if (!branchExists('main')) {
+    // main 不存在，从当前 develop 创建
+    run('git checkout -b main');
+    run('git checkout develop');
+  }
+
   run('git checkout main');
 
   try {
     run('git merge develop --no-ff -m "merge: develop → main"');
   } catch {
-    console.error('\n  ❌ 合并冲突! 请手动解决后执行:');
+    console.error('\n  ❌ 合并冲突! 请手动解决:');
     console.error('     git add . && git commit');
     console.error('     然后重新运行 npm run merge\n');
     process.exit(1);
