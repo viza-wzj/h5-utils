@@ -120,7 +120,7 @@ async function main() {
 
   // 提交版本号变更
   run('git add package.json package-lock.json CHANGELOG.md');
-  run(`git commit -m "release: v${nextVer}\n\n${tagMsg}"`);
+  run(`git commit -m "release: v${nextVer}" -m "${tagMsg}"`);
 
   // [6/7] 发布
   console.log('\n  [6/7] 发布到 npm...');
@@ -156,7 +156,7 @@ async function main() {
   if (tagExists(`v${nextVer}`)) {
     run(`git tag -d v${nextVer}`);
   }
-  run(`git tag -a v${nextVer} -m "release: v${nextVer}\n\n${tagMsg}"`);
+  run(`git tag -a v${nextVer} -m "release: v${nextVer}" -m "${tagMsg}"`);
 
   // 推送
   if (hasRemote) {
