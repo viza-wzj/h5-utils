@@ -3,7 +3,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "H5常用工具库，封装前端高频方法，采用适配器模式支持浏览器与Taro多端切换",
   "keywords": [
     "utils",
