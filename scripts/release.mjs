@@ -1,5 +1,5 @@
 import { execSync } from 'child_process';
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { createInterface } from 'readline';
 
 const [, , arg] = process.argv;
@@ -29,14 +29,13 @@ function bump(ver, idx) {
   return parts.join('.');
 }
 
-async function prompt() {
+async function prompt(question) {
   const rl = createInterface({ input: process.stdin, output: process.stdout });
 
   return new Promise((resolve) => {
-    rl.question('  请输入选择 (1/2/3): ', (answer) => {
+    rl.question(`  ${question}`, (answer) => {
       rl.close();
-      const map = { '1': 'patch', '2': 'minor', '3': 'major' };
-      resolve(map[answer.trim()]);
+      resolve(answer.trim());
     });
   });
 }
@@ -64,7 +63,9 @@ async function main() {
     console.log(`    3) major  → ${options.major}`);
     console.log(`    0) 取消\n`);
 
-    type = await prompt();
+    type = await prompt('请输入选择 (1/2/3): ');
+    const map = { '1': 'patch', '2': 'minor', '3': 'major' };
+    type = map[type];
     if (!type) {
       console.log('  已取消');
       process.exit(0);
@@ -76,38 +77,53 @@ async function main() {
   const hasRemote = runQuiet('git remote').length > 0;
 
   console.log(`\n  ${current} → ${nextVer} (${type})`);
-  console.log(`  当前分支: ${srcBranch}\n`);
+  console.log(`  当前分支: ${srcBranch}`);
 
-  // [1/6] 提交未保存更改
+  // 输入改动描述
+  const changelog = await prompt('\n  请输入本次改动描述: ');
+  const tagMsg = changelog || `${type} release`;
+
+  console.log();
+
+  // [1/7] 提交未保存更改
   const status = runQuiet('git status --porcelain');
   if (status) {
-    console.log('  [1/6] 提交未保存更改...');
+    console.log('  [1/7] 提交未保存更改...');
     run('git add -A');
     const msg = arg || `chore: bump ${nextVer}`;
     run(`git commit -m "${msg}"`);
     console.log('  ✅ 已提交\n');
   } else {
-    console.log('  [1/6] 无未保存更改');
+    console.log('  [1/7] 无未保存更改');
   }
 
-  // [2/6] 格式化代码
-  console.log('\n  [2/6] 格式化代码...');
+  // [2/7] 格式化代码
+  console.log('\n  [2/7] 格式化代码...');
   run('npx prettier --write "src/**/*.ts"');
 
-  // [3/6] 构建
-  console.log('\n  [3/6] 构建项目...');
+  // [3/7] 构建
+  console.log('\n  [3/7] 构建项目...');
   run('npm run build');
 
-  // [4/6] 更新版本号
-  console.log(`\n  [4/6] 更新版本号 ${nextVer}...`);
+  // [4/7] 写入 CHANGELOG
+  console.log('\n  [4/7] 写入 CHANGELOG...');
+  const date = new Date().toISOString().slice(0, 10);
+  const entry = `## v${nextVer} (${date})\n\n${tagMsg}\n`;
+  const oldLog = existsSync('CHANGELOG.md') ? readFileSync('CHANGELOG.md', 'utf-8') : '';
+  const header = '# Changelog\n\n';
+  const body = oldLog.startsWith('# Changelog') ? oldLog.slice(header.length) : oldLog.replace(/^#.*\n?/, '');
+  writeFileSync('CHANGELOG.md', header + entry + '\n' + body);
+
+  // [5/7] 更新版本号
+  console.log(`\n  [5/7] 更新版本号 ${nextVer}...`);
   execSync(`npm version ${type} --no-git-tag-version`, { stdio: 'inherit' });
 
   // 提交版本号变更
-  run('git add package.json');
+  run('git add package.json package-lock.json CHANGELOG.md');
   run(`git commit -m "release: v${nextVer}"`);
 
-  // [5/6] 发布
-  console.log('\n  [5/6] 发布到 npm...');
+  // [6/7] 发布
+  console.log('\n  [6/7] 发布到 npm...');
   try {
     execSync('npm publish --access public', { stdio: 'inherit' });
     console.log(`\n  ✅ 发布成功! @i17hush/h5-utils@${nextVer}`);
@@ -119,8 +135,8 @@ async function main() {
     process.exit(1);
   }
 
-  // [6/6] 合并到 main + 打 tag
-  console.log('\n  [6/6] 合并到 main 并打 tag...');
+  // [7/7] 合并到 main + 打 tag
+  console.log('\n  [7/7] 合并到 main 并打 tag...');
   if (!branchExists('main')) {
     run('git checkout -b main');
     run(`git checkout ${srcBranch}`);
@@ -140,7 +156,7 @@ async function main() {
   if (tagExists(`v${nextVer}`)) {
     run(`git tag -d v${nextVer}`);
   }
-  run(`git tag -a v${nextVer} -m "release: v${nextVer}"`);
+  run(`git tag -a v${nextVer} -m "release: v${nextVer}\n\n${tagMsg}"`);
 
   // 推送
   if (hasRemote) {

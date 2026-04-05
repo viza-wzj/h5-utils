@@ -49,7 +49,7 @@ function main() {
   console.log(`  远程仓库: ${hasRemote ? '有' : '无'}\n`);
 
   // 1. 格式化 + 构建
-  console.log('  [1/5] 格式化代码...');
+  console.log('\n  [1/5] 格式化代码...');
   run('npx prettier --write "src/**/*.ts"');
 
   console.log('\n  [2/5] 构建项目...');
