@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.2.15 (2026-04-06)
+
+feat:change version
+
+## v1.2.13 (2026-04-06)
+
+feat:项目改为monorepo架构
+
 ## v1.2.13 (2026-04-06)
 
 feat:优化

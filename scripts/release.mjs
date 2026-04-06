@@ -1,15 +1,20 @@
 import { execSync } from 'child_process';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { createInterface } from 'readline';
+import { resolve } from 'path';
+
+const ROOT = resolve(import.meta.dirname, '..');
+const CORE_DIR = resolve(ROOT, 'packages/core');
+const CORE_PKG = resolve(CORE_DIR, 'package.json');
 
 const [, , arg] = process.argv;
 
-function run(cmd) {
-  execSync(cmd, { stdio: 'inherit' });
+function run(cmd, opts) {
+  execSync(cmd, { stdio: 'inherit', ...opts });
 }
 
-function runQuiet(cmd) {
-  return execSync(cmd, { encoding: 'utf-8' }).trim();
+function runQuiet(cmd, opts) {
+  return execSync(cmd, { encoding: 'utf-8', ...opts }).trim();
 }
 
 function branchExists(name) {
@@ -31,7 +36,6 @@ function bump(ver, idx) {
 
 async function prompt(question) {
   const rl = createInterface({ input: process.stdin, output: process.stdout });
-
   return new Promise((resolve) => {
     rl.question(`  ${question}`, (answer) => {
       rl.close();
@@ -41,11 +45,9 @@ async function prompt(question) {
 }
 
 async function main() {
-  // 读取当前版本
-  let pkg = JSON.parse(readFileSync('package.json', 'utf-8'));
+  const pkg = JSON.parse(readFileSync(CORE_PKG, 'utf-8'));
   const current = pkg.version;
 
-  // 选择版本号
   let type;
   const options = {
     patch: bump(current, 2),
@@ -79,7 +81,6 @@ async function main() {
   console.log(`\n  ${current} → ${nextVer} (${type})`);
   console.log(`  当前分支: ${srcBranch}`);
 
-  // 输入改动描述
   const changelog = await prompt('\n  请输入本次改动描述: ');
   const tagMsg = changelog || `${type} release`;
 
@@ -99,8 +100,7 @@ async function main() {
 
   // [2/7] 格式化代码
   console.log('\n  [2/7] 格式化代码...');
-  run('pnpm prettier --write "src/**/*.ts"');
-  // 提交格式化产生的改动
+  run('pnpm prettier --write "packages/core/src/**/*.ts"');
   const formatStatus = runQuiet('git status --porcelain');
   if (formatStatus) {
     run('git add -A');
@@ -115,29 +115,31 @@ async function main() {
   console.log('\n  [4/7] 写入 CHANGELOG...');
   const date = new Date().toISOString().slice(0, 10);
   const entry = `## v${nextVer} (${date})\n\n${tagMsg}\n`;
-  const oldLog = existsSync('CHANGELOG.md') ? readFileSync('CHANGELOG.md', 'utf-8') : '';
+  const changelogPath = resolve(ROOT, 'CHANGELOG.md');
+  const oldLog = existsSync(changelogPath) ? readFileSync(changelogPath, 'utf-8') : '';
   const header = '# Changelog\n\n';
-  const body = oldLog.startsWith('# Changelog') ? oldLog.slice(header.length) : oldLog.replace(/^#.*\n?/, '');
-  writeFileSync('CHANGELOG.md', header + entry + '\n' + body);
+  const body = oldLog.startsWith('# Changelog')
+    ? oldLog.slice(header.length)
+    : oldLog.replace(/^#.*\n?/, '');
+  writeFileSync(changelogPath, header + entry + '\n' + body);
 
   // [5/7] 更新版本号
   console.log(`\n  [5/7] 更新版本号 ${nextVer}...`);
-  execSync(`npm version ${type} --no-git-tag-version`, { stdio: 'inherit' });
-  // pnpm 不改 lock 文件格式，npm version 已经改了 package.json
+  run(`npm version ${type} --no-git-tag-version`, { cwd: CORE_DIR });
 
   // 提交版本号变更
-  run('git add package.json pnpm-lock.yaml CHANGELOG.md');
+  run('git add packages/core/package.json pnpm-lock.yaml CHANGELOG.md');
   run(`git commit -m "release: v${nextVer}" -m "${tagMsg}"`);
 
   // [6/7] 发布
   console.log('\n  [6/7] 发布到 npm...');
   try {
-    execSync('pnpm publish --access public --no-git-checks', { stdio: 'inherit' });
+    run('pnpm publish --access public --no-git-checks', { cwd: CORE_DIR });
     console.log(`\n  ✅ 发布成功! @i17hush/h5-utils@${nextVer}`);
   } catch {
     console.log('\n  ❌ 发布失败，回退版本号...');
-    execSync(`npm version ${current} --no-git-tag-version`, { stdio: 'inherit' });
-    run('git add package.json');
+    run(`npm version ${current} --no-git-tag-version`, { cwd: CORE_DIR });
+    run('git add packages/core/package.json');
     run(`git commit -m "revert: version back to ${current}"`);
     process.exit(1);
   }
@@ -152,20 +154,20 @@ async function main() {
   run('git checkout main');
 
   try {
-    run(`git merge ${srcBranch} --no-ff -m "merge: ${srcBranch} → main v${nextVer}" -m "${tagMsg}"`);
+    run(
+      `git merge ${srcBranch} --no-ff -m "merge: ${srcBranch} → main v${nextVer}" -m "${tagMsg}"`,
+    );
   } catch {
     console.error('\n  ❌ 合并冲突! 请手动解决:');
     console.error('     git add . && git commit');
     process.exit(1);
   }
 
-  // 打 tag
   if (tagExists(`v${nextVer}`)) {
     run(`git tag -d v${nextVer}`);
   }
   run(`git tag -a v${nextVer} -m "release: v${nextVer}" -m "${tagMsg}"`);
 
-  // 推送
   if (hasRemote) {
     try {
       run('git push origin main --tags');
@@ -177,7 +179,6 @@ async function main() {
     }
   }
 
-  // 切回原分支
   run(`git checkout ${srcBranch}`);
 
   console.log(`\n  ✅ 全部完成!`);
