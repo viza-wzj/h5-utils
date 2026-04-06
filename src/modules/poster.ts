@@ -13,6 +13,8 @@ import { safeCallAsync } from '../utils';
 export interface PosterConfig {
   width: number;
   height: number;
+  /** 小程序中页面 canvas 组件的 canvas-id，H5 中忽略 */
+  canvasId?: string;
   backgroundColor?: string;
   backgroundGradient?: GradientConfig;
   backgroundImage?: string;
@@ -360,7 +362,7 @@ export function drawPoster(config: PosterConfig): Promise<string> {
   return safeCallAsync(
     async () => {
       const adapter = getAdapter();
-      const { canvas, ctx } = adapter.canvas.createContext(config.width, config.height);
+      const { canvas, ctx } = adapter.canvas.createContext(config.width, config.height, config.canvasId);
 
       if (!ctx) throw new Error('Failed to create canvas context');
 

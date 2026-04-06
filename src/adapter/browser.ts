@@ -131,7 +131,7 @@ export const browserAdapter: PlatformAdapter = {
   },
 
   canvas: {
-    createContext(width: number, height: number) {
+    createContext(width: number, height: number, _canvasId?: string) {
       const canvas = document.createElement('canvas');
       canvas.width = width;
       canvas.height = height;

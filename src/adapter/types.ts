@@ -115,8 +115,8 @@ export interface ShadowConfig {
 
 /** Canvas 适配器 */
 export interface CanvasAdapter {
-  /** 创建画布并获取绘制 context */
-  createContext(width: number, height: number): any;
+  /** 创建画布并获取绘制 context，canvasId 用于小程序 */
+  createContext(width: number, height: number, canvasId?: string): any;
   /** 将画布导出为图片路径 */
   toImage(canvas: any, options?: { quality?: number }): Promise<string>;
   /** 加载图片 */
