@@ -205,12 +205,25 @@ export function createTaroAdapter(taro: TaroInstance): PlatformAdapter {
     },
 
     canvas: {
-      createContext(width: number, height: number) {
-        const canvasId = `h5-utils-poster-${Date.now()}`;
-        const ctx = taro.createCanvasContext(canvasId);
-        return { canvas: { canvasId, width, height }, ctx, canvasId };
+      createContext(width: number, height: number, canvasId?: string) {
+        // H5 环境使用浏览器原生 canvas
+        if (typeof document !== 'undefined') {
+          const cvs = document.createElement('canvas');
+          cvs.width = width;
+          cvs.height = height;
+          return { canvas: cvs, ctx: cvs.getContext('2d') };
+        }
+        // 小程序环境
+        const id = canvasId || `h5-utils-poster-${Date.now()}`;
+        const ctx = taro.createCanvasContext(id);
+        return { canvas: { canvasId: id, width, height }, ctx, canvasId: id };
       },
       async toImage(canvas: any, options?: { quality?: number }) {
+        // H5 环境
+        if (typeof document !== 'undefined' && canvas instanceof HTMLCanvasElement) {
+          return canvas.toDataURL('image/png', options?.quality);
+        }
+        // 小程序环境
         const res = await new Promise<{ tempFilePath: string }>((resolve, reject) => {
           taro.canvasToTempFilePath({
             canvasId: canvas.canvasId,
@@ -223,6 +236,17 @@ export function createTaroAdapter(taro: TaroInstance): PlatformAdapter {
         return res.tempFilePath;
       },
       async loadImage(src: string) {
+        // H5 环境
+        if (typeof document !== 'undefined') {
+          return new Promise<HTMLImageElement>((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => resolve(img);
+            img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
+            img.src = src;
+          });
+        }
+        // 小程序环境
         const res = await new Promise<{ path: string; width: number; height: number }>(
           (resolve, reject) => {
             taro.getImageInfo({ src, success: resolve, fail: reject });
