@@ -31,3 +31,17 @@ export async function safeCallAsync<T>(
     return fallback;
   }
 }
+
+/**
+ * 拼接 URL 查询参数
+ */
+export function appendUrlParams(url: string, params?: Record<string, any>): string {
+  if (!params || !Object.keys(params).length) return url;
+  const search = Object.entries(params)
+    .filter(([, v]) => v !== undefined && v !== null)
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+    .join('&');
+  if (!search) return url;
+  const sep = url.includes('?') ? '&' : '?';
+  return `${url}${sep}${search}`;
+}

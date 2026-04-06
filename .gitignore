@@ -3,3 +3,4 @@ dist/
 *.tgz
 .temp-dts/
 .claude
+package-lock.json

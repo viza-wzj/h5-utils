@@ -50,10 +50,10 @@ function main() {
 
   // 1. 格式化 + 构建
   console.log('\n  [1/5] 格式化代码...');
-  run('npx prettier --write "src/**/*.ts"');
+  run('pnpm prettier --write "src/**/*.ts"');
 
   console.log('\n  [2/5] 构建项目...');
-  run('npm run build');
+  run('pnpm run build');
 
   // 2. 确保 main 分支存在
   console.log('\n  [3/5] 合并 develop → main...');

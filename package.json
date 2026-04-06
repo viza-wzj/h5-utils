@@ -3,7 +3,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.2.12",
+  "version": "1.2.13",
   "description": "H5常用工具库，封装前端高频方法，采用适配器模式支持浏览器与Taro多端切换",
   "keywords": [
     "utils",
@@ -53,10 +53,10 @@
     "build": "rollup -c",
     "dev": "node scripts/dev.mjs",
     "dev:weapp": "node scripts/dev.mjs weapp",
-    "setup": "cd examples/taro-app && npm install",
+    "setup": "cd examples/taro-app && pnpm install",
     "format": "prettier --write \"src/**/*.ts\"",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "npm run build",
+    "prepublishOnly": "pnpm run build",
     "merge": "node scripts/merge.mjs",
     "release": "node scripts/release.mjs",
     "release:patch": "node scripts/release.mjs patch",
