@@ -6,6 +6,16 @@
 import { getAdapter } from '../adapter';
 import { safeCallAsync } from '../utils';
 
+function validateUrl(url: string, method: string): void {
+  if (!url || typeof url !== 'string') {
+    throw new Error(`路由地址不能为空`);
+  }
+  const trimmed = url.trim();
+  if (!trimmed || trimmed === '/') {
+    throw new Error(`路由地址无效: "${url}"`);
+  }
+}
+
 /**
  * 保留当前页面，跳转到新页面
  * - H5: window.location.href
@@ -13,7 +23,7 @@ import { safeCallAsync } from '../utils';
  */
 export function navigateTo(url: string, options?: { params?: Record<string, any> }): Promise<void> {
   return safeCallAsync(
-    () => getAdapter().navigation.navigateTo(url, options),
+    () => { validateUrl(url, 'navigateTo'); return getAdapter().navigation.navigateTo(url, options); },
     undefined,
     'navigateTo',
   );
@@ -26,7 +36,7 @@ export function navigateTo(url: string, options?: { params?: Record<string, any>
  */
 export function redirectTo(url: string, options?: { params?: Record<string, any> }): Promise<void> {
   return safeCallAsync(
-    () => getAdapter().navigation.redirectTo(url, options),
+    () => { validateUrl(url, 'redirectTo'); return getAdapter().navigation.redirectTo(url, options); },
     undefined,
     'redirectTo',
   );
@@ -38,7 +48,11 @@ export function redirectTo(url: string, options?: { params?: Record<string, any>
  * - 小程序: wx.switchTab / Taro.switchTab
  */
 export function switchTab(url: string): Promise<void> {
-  return safeCallAsync(() => getAdapter().navigation.switchTab(url), undefined, 'switchTab');
+  return safeCallAsync(
+    () => { validateUrl(url, 'switchTab'); return getAdapter().navigation.switchTab(url); },
+    undefined,
+    'switchTab',
+  );
 }
 
 /**
@@ -47,7 +61,11 @@ export function switchTab(url: string): Promise<void> {
  * - 小程序: wx.reLaunch / Taro.reLaunch
  */
 export function reLaunch(url: string): Promise<void> {
-  return safeCallAsync(() => getAdapter().navigation.reLaunch(url), undefined, 'reLaunch');
+  return safeCallAsync(
+    () => { validateUrl(url, 'reLaunch'); return getAdapter().navigation.reLaunch(url); },
+    undefined,
+    'reLaunch',
+  );
 }
 
 /**
