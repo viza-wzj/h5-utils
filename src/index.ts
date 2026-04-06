@@ -82,7 +82,7 @@ export { isMobilePhone, isEmail, isIdCard, isUrl, isChinese } from './modules/va
 export { navigateTo, redirectTo, switchTab, reLaunch, navigateBack } from './modules/router';
 
 // Poster 模块
-export { drawPoster } from './modules/poster';
+export { drawPoster, imageToBase64 } from './modules/poster';
 export type {
   PosterConfig,
   PosterElement,
