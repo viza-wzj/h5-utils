@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.7 (2026-04-06)
+
+feat:router fix
+
 ## v1.2.6 (2026-04-05)
 
 feat:666
