@@ -1,7 +1,8 @@
 import typescript from '@rollup/plugin-typescript';
+import resolve from '@rollup/plugin-node-resolve';
 import dts from 'rollup-plugin-dts';
 
-const commonPlugins = [typescript({ tsconfig: './tsconfig.json' })];
+const commonPlugins = [resolve(), typescript({ tsconfig: './tsconfig.json' })];
 
 export default [
   // 主入口

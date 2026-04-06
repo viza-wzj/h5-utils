@@ -206,8 +206,8 @@ export function createTaroAdapter(taro: TaroInstance): PlatformAdapter {
 
     canvas: {
       createContext(width: number, height: number, canvasId?: string) {
-        // H5 环境使用浏览器原生 canvas
-        if (typeof document !== 'undefined') {
+        // 浏览器环境（Taro H5）使用原生 canvas
+        if (typeof HTMLCanvasElement !== 'undefined') {
           const cvs = document.createElement('canvas');
           cvs.width = width;
           cvs.height = height;
@@ -219,25 +219,26 @@ export function createTaroAdapter(taro: TaroInstance): PlatformAdapter {
         return { canvas: { canvasId: id, width, height }, ctx, canvasId: id };
       },
       async toImage(canvas: any, options?: { quality?: number }) {
-        // H5 环境
-        if (typeof document !== 'undefined' && canvas instanceof HTMLCanvasElement) {
+        // 浏览器环境
+        if (typeof HTMLCanvasElement !== 'undefined' && canvas instanceof HTMLCanvasElement) {
           return canvas.toDataURL('image/png', options?.quality);
         }
         // 小程序环境
         const res = await new Promise<{ tempFilePath: string }>((resolve, reject) => {
+          const timer = setTimeout(() => reject(new Error('canvasToTempFilePath timeout')), 5000);
           taro.canvasToTempFilePath({
             canvasId: canvas.canvasId,
             canvas,
             quality: options?.quality,
-            success: resolve,
-            fail: reject,
+            success: (r: any) => { clearTimeout(timer); resolve(r); },
+            fail: (e: any) => { clearTimeout(timer); reject(e); },
           });
         });
         return res.tempFilePath;
       },
       async loadImage(src: string) {
-        // H5 环境
-        if (typeof document !== 'undefined') {
+        // 浏览器环境
+        if (typeof HTMLCanvasElement !== 'undefined') {
           return new Promise<HTMLImageElement>((resolve, reject) => {
             const img = new Image();
             img.crossOrigin = 'anonymous';

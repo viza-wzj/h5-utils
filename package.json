@@ -51,6 +51,9 @@
   },
   "scripts": {
     "build": "rollup -c",
+    "dev": "node scripts/dev.mjs",
+    "dev:weapp": "node scripts/dev.mjs weapp",
+    "setup": "cd examples/taro-app && npm install",
     "format": "prettier --write \"src/**/*.ts\"",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run build",
@@ -61,6 +64,7 @@
     "release:major": "node scripts/release.mjs major"
   },
   "devDependencies": {
+    "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-typescript": "^11.1.6",
     "@rollup/rollup-darwin-arm64": "^4.60.1",
     "prettier": "^3.8.1",
@@ -68,5 +72,8 @@
     "rollup-plugin-dts": "^6.1.1",
     "tslib": "^2.6.3",
     "typescript": "^5.5.0"
+  },
+  "dependencies": {
+    "qrcode-generator": "^2.0.4"
   }
 }
