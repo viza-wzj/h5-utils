@@ -104,7 +104,14 @@ async function drawBackground(ctx: any, config: PosterConfig, adapter: any): Pro
   }
 
   if (config.backgroundGradient) {
-    const gradient = createGradient(ctx, config.backgroundGradient, 0, 0, config.width, config.height);
+    const gradient = createGradient(
+      ctx,
+      config.backgroundGradient,
+      0,
+      0,
+      config.width,
+      config.height,
+    );
     ctx.fillStyle = gradient;
   } else {
     ctx.fillStyle = config.backgroundColor || '#ffffff';
@@ -282,12 +289,7 @@ async function drawImage(ctx: any, el: ImageElement, adapter: any): Promise<void
 }
 
 /** 文字换行分割 */
-function splitTextLines(
-  ctx: any,
-  text: string,
-  maxWidth: number,
-  maxLines?: number,
-): string[] {
+function splitTextLines(ctx: any, text: string, maxWidth: number, maxLines?: number): string[] {
   const lines: string[] = [];
   let currentLine = '';
 
@@ -355,37 +357,41 @@ function drawText(ctx: any, el: TextElement): void {
  * @returns 图片路径（H5 为 data URL，小程序为临时文件路径）
  */
 export function drawPoster(config: PosterConfig): Promise<string> {
-  return safeCallAsync(async () => {
-    const adapter = getAdapter();
-    const { canvas, ctx } = adapter.canvas.createContext(config.width, config.height);
+  return safeCallAsync(
+    async () => {
+      const adapter = getAdapter();
+      const { canvas, ctx } = adapter.canvas.createContext(config.width, config.height);
 
-    if (!ctx) throw new Error('Failed to create canvas context');
+      if (!ctx) throw new Error('Failed to create canvas context');
 
-    // 绘制背景
-    await drawBackground(ctx, config, adapter.canvas);
+      // 绘制背景
+      await drawBackground(ctx, config, adapter.canvas);
 
-    // 按顺序绘制元素
-    for (const el of config.elements) {
-      switch (el.type) {
-        case 'rect':
-          drawRect(ctx, el, config.width, config.height);
-          break;
-        case 'circle':
-          drawCircle(ctx, el);
-          break;
-        case 'line':
-          drawLine(ctx, el);
-          break;
-        case 'text':
-          drawText(ctx, el);
-          break;
-        case 'image':
-          await drawImage(ctx, el, adapter.canvas);
-          break;
+      // 按顺序绘制元素
+      for (const el of config.elements) {
+        switch (el.type) {
+          case 'rect':
+            drawRect(ctx, el, config.width, config.height);
+            break;
+          case 'circle':
+            drawCircle(ctx, el);
+            break;
+          case 'line':
+            drawLine(ctx, el);
+            break;
+          case 'text':
+            drawText(ctx, el);
+            break;
+          case 'image':
+            await drawImage(ctx, el, adapter.canvas);
+            break;
+        }
       }
-    }
 
-    // 导出图片
-    return adapter.canvas.toImage(canvas);
-  }, '', 'drawPoster');
+      // 导出图片
+      return adapter.canvas.toImage(canvas);
+    },
+    '',
+    'drawPoster',
+  );
 }
