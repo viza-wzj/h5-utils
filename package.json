@@ -3,7 +3,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.2.11",
+  "version": "1.2.12",
   "description": "H5常用工具库，封装前端高频方法，采用适配器模式支持浏览器与Taro多端切换",
   "keywords": [
     "utils",
@@ -51,6 +51,9 @@
   },
   "scripts": {
     "build": "rollup -c",
+    "dev": "node scripts/dev.mjs",
+    "dev:weapp": "node scripts/dev.mjs weapp",
+    "setup": "cd examples/taro-app && npm install",
     "format": "prettier --write \"src/**/*.ts\"",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run build",
@@ -61,6 +64,7 @@
     "release:major": "node scripts/release.mjs major"
   },
   "devDependencies": {
+    "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-typescript": "^11.1.6",
     "@rollup/rollup-darwin-arm64": "^4.60.1",
     "prettier": "^3.8.1",
@@ -68,5 +72,8 @@
     "rollup-plugin-dts": "^6.1.1",
     "tslib": "^2.6.3",
     "typescript": "^5.5.0"
+  },
+  "dependencies": {
+    "qrcode-generator": "^2.0.4"
   }
 }

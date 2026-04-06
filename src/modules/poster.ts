@@ -3,6 +3,8 @@
  * 通过 JSON 配置描述海报内容，自动适配 H5 和小程序环境
  */
 
+import qrcode from 'qrcode-generator';
+
 import { getAdapter } from '../adapter';
 import type { GradientConfig, ShadowConfig } from '../adapter/types';
 import { safeCallAsync } from '../utils';
@@ -26,8 +28,29 @@ export interface PosterConfig {
   elements: PosterElement[];
 }
 
+/** 二维码元素 */
+export interface QrcodeElement {
+  type: 'qrcode';
+  x: number;
+  y: number;
+  text: string;
+  size?: number;
+  color?: string;
+  backgroundColor?: string;
+  /** 纠错等级 'L' | 'M' | 'Q' | 'H'，默认 'M' */
+  level?: string;
+  /** 二维码内边距模块数，默认 2 */
+  padding?: number;
+}
+
 /** 海报元素联合类型 */
-export type PosterElement = ImageElement | TextElement | RectElement | CircleElement | LineElement;
+export type PosterElement =
+  | ImageElement
+  | TextElement
+  | RectElement
+  | CircleElement
+  | LineElement
+  | QrcodeElement;
 
 /** 图片元素 */
 export interface ImageElement {
@@ -121,13 +144,15 @@ export async function imageToBase64(url: string): Promise<string> {
 
 /** 绘制背景 */
 async function drawBackground(ctx: any, config: PosterConfig, adapter: any): Promise<void> {
-  // 背景图优先
+  // 背景图优先（加载失败时降级到纯色/渐变）
   if (config.backgroundImage) {
-    const img = await adapter.loadImage(proxyUrl(config.backgroundImage, config.imageProxy));
-    if (img) {
-      ctx.drawImage(img, 0, 0, config.width, config.height);
-      return;
-    }
+    try {
+      const img = await adapter.loadImage(proxyUrl(config.backgroundImage, config.imageProxy));
+      if (img) {
+        ctx.drawImage(img, 0, 0, config.width, config.height);
+        return;
+      }
+    } catch {}
   }
 
   if (config.backgroundGradient) {
@@ -270,10 +295,20 @@ function drawLine(ctx: any, el: LineElement): void {
 
 /** 绘制图片元素 */
 async function drawImage(ctx: any, el: ImageElement, adapter: any, proxy?: string): Promise<void> {
-  const img = await adapter.loadImage(proxyUrl(el.src, proxy));
+  let img: any;
+  try {
+    img = await adapter.loadImage(proxyUrl(el.src, proxy));
+  } catch {
+    return;
+  }
   if (!img) return;
 
   ctx.save();
+  // 高质量缩放，减少模糊
+  if (typeof ctx.imageSmoothingEnabled !== 'undefined') {
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+  }
 
   // 圆形裁剪
   if (el.circle) {
@@ -376,6 +411,47 @@ function drawText(ctx: any, el: TextElement): void {
   ctx.restore();
 }
 
+/** 绘制二维码元素 */
+function drawQrcode(ctx: any, el: QrcodeElement): void {
+  const size = el.size || 100;
+  const margin = el.padding ?? 2;
+  const level = (el.level || 'M') as 'L' | 'M' | 'Q' | 'H';
+
+  const qr = qrcode(0, level);
+  qr.addData(el.text);
+  qr.make();
+
+  const moduleCount = qr.getModuleCount();
+  // 取整 cellSize 避免亚像素抗锯齿模糊
+  const cellSize = Math.floor(size / (moduleCount + margin * 2));
+  const totalSize = cellSize * (moduleCount + margin * 2);
+
+  ctx.save();
+
+  // 背景
+  if (el.backgroundColor !== 'transparent') {
+    ctx.fillStyle = el.backgroundColor || '#ffffff';
+    ctx.fillRect(el.x, el.y, totalSize, totalSize);
+  }
+
+  // 绘制模块（坐标全部取整）
+  ctx.fillStyle = el.color || '#000000';
+  for (let row = 0; row < moduleCount; row++) {
+    for (let col = 0; col < moduleCount; col++) {
+      if (qr.isDark(row, col)) {
+        ctx.fillRect(
+          el.x + (col + margin) * cellSize,
+          el.y + (row + margin) * cellSize,
+          cellSize,
+          cellSize,
+        );
+      }
+    }
+  }
+
+  ctx.restore();
+}
+
 // ==================== 对外接口 ====================
 
 /**
@@ -387,13 +463,18 @@ export function drawPoster(config: PosterConfig): Promise<string> {
   return safeCallAsync(
     async () => {
       const adapter = getAdapter();
-      const { canvas, ctx } = adapter.canvas.createContext(
-        config.width,
-        config.height,
-        config.canvasId,
-      );
+      const dpr = adapter.device.getInfo().pixelRatio || 1;
+      const w = config.width * dpr;
+      const h = config.height * dpr;
+
+      const { canvas, ctx } = adapter.canvas.createContext(w, h, config.canvasId);
 
       if (!ctx) throw new Error('Failed to create canvas context');
+
+      // 缩放绘制上下文，使后续所有绘制坐标仍使用逻辑像素
+      if (typeof ctx.scale === 'function') {
+        ctx.scale(dpr, dpr);
+      }
 
       // 绘制背景
       await drawBackground(ctx, config, adapter.canvas);
@@ -416,11 +497,39 @@ export function drawPoster(config: PosterConfig): Promise<string> {
           case 'image':
             await drawImage(ctx, el, adapter.canvas, config.imageProxy);
             break;
+          case 'qrcode':
+            drawQrcode(ctx, el);
+            break;
         }
       }
 
-      // 导出图片
-      return adapter.canvas.toImage(canvas);
+      // 小程序 canvas 是命令队列模式，需要调用 draw() 提交绘制
+      if (typeof ctx.draw === 'function') {
+        await new Promise<void>((resolve) => {
+          let done = false;
+          const finish = () => {
+            if (!done) {
+              done = true;
+              resolve();
+            }
+          };
+          try {
+            ctx.draw(true, finish);
+          } catch {
+            finish();
+          }
+          setTimeout(finish, 3000);
+        });
+      }
+
+      // 导出图片（加超时保护）
+      const imageResult = await Promise.race([
+        adapter.canvas.toImage(canvas),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('toImage timeout')), 5000),
+        ),
+      ]);
+      return imageResult;
     },
     '',
     'drawPoster',

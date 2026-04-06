@@ -91,4 +91,5 @@ export type {
   RectElement,
   CircleElement,
   LineElement,
+  QrcodeElement,
 } from './modules/poster';

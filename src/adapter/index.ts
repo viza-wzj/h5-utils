@@ -187,7 +187,7 @@ function createNativeAdapter(native: any): PlatformAdapter {
         return res.tempFilePath;
       },
       async loadImage(src: string) {
-        if (typeof document !== 'undefined') {
+        if (typeof HTMLCanvasElement !== 'undefined') {
           return new Promise<HTMLImageElement>((resolve, reject) => {
             const img = new Image();
             img.crossOrigin = 'anonymous';
