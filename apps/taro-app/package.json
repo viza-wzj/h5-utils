@@ -15,6 +15,7 @@
     "build:h5": "taro build --type h5"
   },
   "dependencies": {
+    "@i17hush/h5-utils": "workspace:*",
     "@babel/preset-env": "^7.29.2",
     "@babel/preset-react": "^7.28.5",
     "@babel/preset-typescript": "^7.28.5",
