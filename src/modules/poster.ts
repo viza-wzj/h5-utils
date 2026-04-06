@@ -362,7 +362,11 @@ export function drawPoster(config: PosterConfig): Promise<string> {
   return safeCallAsync(
     async () => {
       const adapter = getAdapter();
-      const { canvas, ctx } = adapter.canvas.createContext(config.width, config.height, config.canvasId);
+      const { canvas, ctx } = adapter.canvas.createContext(
+        config.width,
+        config.height,
+        config.canvasId,
+      );
 
       if (!ctx) throw new Error('Failed to create canvas context');
 
