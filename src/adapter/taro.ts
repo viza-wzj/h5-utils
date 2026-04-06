@@ -1,4 +1,5 @@
 import type { PlatformAdapter } from './types';
+import { appendUrlParams } from '../utils';
 
 /**
  * Taro 适配器
@@ -69,18 +70,6 @@ let _scrollLocked = false;
  * 创建 Taro 适配器
  * @param taro Taro 实例，由用户传入以避免硬依赖
  */
-/** 将 params 拼接到小程序 url 上（如 /pages/index?foo=bar） */
-function buildMiniProgramUrl(url: string, params?: Record<string, any>): string {
-  if (!params || !Object.keys(params).length) return url;
-  const search = Object.entries(params)
-    .filter(([, v]) => v !== undefined && v !== null)
-    .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
-    .join('&');
-  if (!search) return url;
-  const sep = url.includes('?') ? '&' : '?';
-  return `${url}${sep}${search}`;
-}
-
 export function createTaroAdapter(taro: TaroInstance): PlatformAdapter {
   return {
     storage: {
@@ -188,10 +177,10 @@ export function createTaroAdapter(taro: TaroInstance): PlatformAdapter {
 
     navigation: {
       async navigateTo(url, options) {
-        await taro.navigateTo({ url: buildMiniProgramUrl(url, options?.params) });
+        await taro.navigateTo({ url: appendUrlParams(url, options?.params) });
       },
       async redirectTo(url, options) {
-        await taro.redirectTo({ url: buildMiniProgramUrl(url, options?.params) });
+        await taro.redirectTo({ url: appendUrlParams(url, options?.params) });
       },
       async switchTab(url) {
         await taro.switchTab({ url });

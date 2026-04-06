@@ -99,7 +99,7 @@ async function main() {
 
   // [2/7] 格式化代码
   console.log('\n  [2/7] 格式化代码...');
-  run('npx prettier --write "src/**/*.ts"');
+  run('pnpm prettier --write "src/**/*.ts"');
   // 提交格式化产生的改动
   const formatStatus = runQuiet('git status --porcelain');
   if (formatStatus) {
@@ -109,7 +109,7 @@ async function main() {
 
   // [3/7] 构建
   console.log('\n  [3/7] 构建项目...');
-  run('npm run build');
+  run('pnpm run build');
 
   // [4/7] 写入 CHANGELOG
   console.log('\n  [4/7] 写入 CHANGELOG...');
@@ -123,15 +123,16 @@ async function main() {
   // [5/7] 更新版本号
   console.log(`\n  [5/7] 更新版本号 ${nextVer}...`);
   execSync(`npm version ${type} --no-git-tag-version`, { stdio: 'inherit' });
+  // pnpm 不改 lock 文件格式，npm version 已经改了 package.json
 
   // 提交版本号变更
-  run('git add package.json package-lock.json CHANGELOG.md');
+  run('git add package.json pnpm-lock.yaml CHANGELOG.md');
   run(`git commit -m "release: v${nextVer}" -m "${tagMsg}"`);
 
   // [6/7] 发布
   console.log('\n  [6/7] 发布到 npm...');
   try {
-    execSync('npm publish --access public', { stdio: 'inherit' });
+    execSync('pnpm publish --access public --no-git-checks', { stdio: 'inherit' });
     console.log(`\n  ✅ 发布成功! @i17hush/h5-utils@${nextVer}`);
   } catch {
     console.log('\n  ❌ 发布失败，回退版本号...');

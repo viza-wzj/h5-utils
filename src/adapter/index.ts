@@ -1,6 +1,7 @@
 import type { PlatformAdapter } from './types';
 import { browserAdapter } from './browser';
 import { createTaroAdapter } from './taro';
+import { appendUrlParams } from '../utils';
 
 export type {
   PlatformAdapter,
@@ -42,22 +43,10 @@ function getTaroInstance(): any {
     return require('@tarojs/taro');
   } catch {}
   // 2. 尝试从全局获取（Taro 运行时可能挂载）
-  const g =
+  const g: any =
     typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : {};
   if (g.Taro) return g.Taro;
   return null;
-}
-
-/** 拼接小程序页面 URL 参数 */
-function buildNativeUrl(url: string, params?: Record<string, any>): string {
-  if (!params || !Object.keys(params).length) return url;
-  const search = Object.entries(params)
-    .filter(([, v]) => v !== undefined && v !== null)
-    .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
-    .join('&');
-  if (!search) return url;
-  const sep = url.includes('?') ? '&' : '?';
-  return `${url}${sep}${search}`;
 }
 
 /** 用原生小程序 API 创建适配器 */
@@ -150,10 +139,10 @@ function createNativeAdapter(native: any): PlatformAdapter {
     },
     navigation: {
       async navigateTo(url, options) {
-        await native.navigateTo({ url: buildNativeUrl(url, options?.params) });
+        await native.navigateTo({ url: appendUrlParams(url, options?.params) });
       },
       async redirectTo(url, options) {
-        await native.redirectTo({ url: buildNativeUrl(url, options?.params) });
+        await native.redirectTo({ url: appendUrlParams(url, options?.params) });
       },
       async switchTab(url) {
         await native.switchTab({ url });

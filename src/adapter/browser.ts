@@ -1,4 +1,5 @@
 import type { PlatformAdapter } from './types';
+import { appendUrlParams } from '../utils';
 
 /**
  * 浏览器环境适配器
@@ -111,11 +112,11 @@ export const browserAdapter: PlatformAdapter = {
 
   navigation: {
     async navigateTo(url, options) {
-      const fullUrl = appendParams(url, options?.params);
+      const fullUrl = appendUrlParams(url, options?.params);
       window.location.href = fullUrl;
     },
     async redirectTo(url, options) {
-      const fullUrl = appendParams(url, options?.params);
+      const fullUrl = appendUrlParams(url, options?.params);
       window.location.replace(fullUrl);
     },
     async switchTab(url) {
@@ -151,17 +152,6 @@ export const browserAdapter: PlatformAdapter = {
     },
   },
 };
-
-function appendParams(url: string, params?: Record<string, any>): string {
-  if (!params || !Object.keys(params).length) return url;
-  const search = Object.entries(params)
-    .filter(([, v]) => v !== undefined && v !== null)
-    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
-    .join('&');
-  if (!search) return url;
-  const sep = url.includes('?') ? '&' : '?';
-  return `${url}${sep}${search}`;
-}
 
 function getBrowserOS(ua: string): string {
   if (/Windows/i.test(ua)) return 'Windows';

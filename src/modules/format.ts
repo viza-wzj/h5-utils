@@ -22,7 +22,7 @@ export function formatDate(date: Date | number | string, fmt = 'YYYY-MM-DD HH:mm
       };
       let result = fmt;
       for (const [key, val] of Object.entries(map)) {
-        result = result.replace(key, val);
+        result = result.replaceAll(key, val);
       }
       return result;
     },
