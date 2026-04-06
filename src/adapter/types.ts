@@ -93,4 +93,32 @@ export interface PlatformAdapter {
   scroll: ScrollAdapter;
   device: DeviceAdapter;
   navigation: NavigationAdapter;
+  canvas: CanvasAdapter;
+}
+
+/** 渐变配置 */
+export interface GradientConfig {
+  type: 'linear' | 'radial';
+  colors: string[];
+  stops?: number[];
+  /** linear: [x0, y0, x1, y1] */
+  direction?: [number, number, number, number];
+}
+
+/** 阴影配置 */
+export interface ShadowConfig {
+  color: string;
+  blur: number;
+  offsetX?: number;
+  offsetY?: number;
+}
+
+/** Canvas 适配器 */
+export interface CanvasAdapter {
+  /** 创建画布并获取绘制 context */
+  createContext(width: number, height: number): any;
+  /** 将画布导出为图片路径 */
+  toImage(canvas: any, options?: { quality?: number }): Promise<string>;
+  /** 加载图片 */
+  loadImage(src: string): Promise<any>;
 }

@@ -129,6 +129,27 @@ export const browserAdapter: PlatformAdapter = {
       window.history.go(-delta);
     },
   },
+
+  canvas: {
+    createContext(width: number, height: number) {
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      return { canvas, ctx: canvas.getContext('2d') };
+    },
+    async toImage(canvas: any, options?: { quality?: number }) {
+      return canvas.toDataURL('image/png', options?.quality);
+    },
+    async loadImage(src: string) {
+      return new Promise<HTMLImageElement>((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
+        img.src = src;
+      });
+    },
+  },
 };
 
 function appendParams(url: string, params?: Record<string, any>): string {

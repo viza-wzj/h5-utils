@@ -11,6 +11,9 @@ export type {
   DeviceAdapter,
   DeviceInfo,
   NavigationAdapter,
+  CanvasAdapter,
+  GradientConfig,
+  ShadowConfig,
 } from './adapter';
 
 // URL 模块
@@ -77,3 +80,15 @@ export { isMobilePhone, isEmail, isIdCard, isUrl, isChinese } from './modules/va
 
 // Router 模块
 export { navigateTo, redirectTo, switchTab, reLaunch, navigateBack } from './modules/router';
+
+// Poster 模块
+export { drawPoster } from './modules/poster';
+export type {
+  PosterConfig,
+  PosterElement,
+  ImageElement,
+  TextElement,
+  RectElement,
+  CircleElement,
+  LineElement,
+} from './modules/poster';
