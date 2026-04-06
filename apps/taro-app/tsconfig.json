@@ -20,7 +20,7 @@
     "typeRoots": ["node_modules/@types"],
     "paths": {
       "@/*": ["./src/*"],
-      "@i17hush/h5-utils": ["../../src/index.ts"]
+      "@i17hush/h5-utils": ["./node_modules/@i17hush/h5-utils/dist/index.d.ts"]
     },
     "baseUrl": "."
   },

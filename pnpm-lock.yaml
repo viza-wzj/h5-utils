@@ -26,6 +26,9 @@ importers:
       '@babel/preset-typescript':
         specifier: ^7.28.5
         version: 7.28.5(@babel/core@7.29.0)
+      '@i17hush/h5-utils':
+        specifier: workspace:*
+        version: link:../../packages/core
       '@tarojs/components':
         specifier: 3.6.38
         version: 3.6.38(@tarojs/helper@3.6.38)(@tarojs/runtime@3.6.38(@tarojs/shared@3.6.38))(@tarojs/shared@3.6.38)(@types/react@18.3.28)(postcss@8.5.8)(react@18.3.1)
