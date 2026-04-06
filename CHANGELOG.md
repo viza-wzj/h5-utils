@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.17 (2026-04-06)
+
+feat:type fix
+
 ## v1.2.16 (2026-04-06)
 
 feat:增加readme
