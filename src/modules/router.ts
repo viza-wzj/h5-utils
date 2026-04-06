@@ -23,7 +23,10 @@ function validateUrl(url: string, method: string): void {
  */
 export function navigateTo(url: string, options?: { params?: Record<string, any> }): Promise<void> {
   return safeCallAsync(
-    () => { validateUrl(url, 'navigateTo'); return getAdapter().navigation.navigateTo(url, options); },
+    () => {
+      validateUrl(url, 'navigateTo');
+      return getAdapter().navigation.navigateTo(url, options);
+    },
     undefined,
     'navigateTo',
   );
@@ -36,7 +39,10 @@ export function navigateTo(url: string, options?: { params?: Record<string, any>
  */
 export function redirectTo(url: string, options?: { params?: Record<string, any> }): Promise<void> {
   return safeCallAsync(
-    () => { validateUrl(url, 'redirectTo'); return getAdapter().navigation.redirectTo(url, options); },
+    () => {
+      validateUrl(url, 'redirectTo');
+      return getAdapter().navigation.redirectTo(url, options);
+    },
     undefined,
     'redirectTo',
   );
@@ -49,7 +55,10 @@ export function redirectTo(url: string, options?: { params?: Record<string, any>
  */
 export function switchTab(url: string): Promise<void> {
   return safeCallAsync(
-    () => { validateUrl(url, 'switchTab'); return getAdapter().navigation.switchTab(url); },
+    () => {
+      validateUrl(url, 'switchTab');
+      return getAdapter().navigation.switchTab(url);
+    },
     undefined,
     'switchTab',
   );
@@ -62,7 +71,10 @@ export function switchTab(url: string): Promise<void> {
  */
 export function reLaunch(url: string): Promise<void> {
   return safeCallAsync(
-    () => { validateUrl(url, 'reLaunch'); return getAdapter().navigation.reLaunch(url); },
+    () => {
+      validateUrl(url, 'reLaunch');
+      return getAdapter().navigation.reLaunch(url);
+    },
     undefined,
     'reLaunch',
   );

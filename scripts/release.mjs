@@ -100,6 +100,12 @@ async function main() {
   // [2/7] 格式化代码
   console.log('\n  [2/7] 格式化代码...');
   run('npx prettier --write "src/**/*.ts"');
+  // 提交格式化产生的改动
+  const formatStatus = runQuiet('git status --porcelain');
+  if (formatStatus) {
+    run('git add -A');
+    run(`git commit -m "style: format code"`);
+  }
 
   // [3/7] 构建
   console.log('\n  [3/7] 构建项目...');
