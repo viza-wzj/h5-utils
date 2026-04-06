@@ -48,6 +48,19 @@ export interface TaroInstance {
   switchTab(options: { url: string }): Promise<void>;
   reLaunch(options: { url: string }): Promise<void>;
   navigateBack(options: { delta?: number }): Promise<void>;
+  createCanvasContext(canvasId: string): any;
+  canvasToTempFilePath(options: {
+    canvasId?: string;
+    canvas?: any;
+    quality?: number;
+    success: (res: { tempFilePath: string }) => void;
+    fail: (err: any) => void;
+  }): Promise<{ tempFilePath: string }>;
+  getImageInfo(options: {
+    src: string;
+    success: (res: { path: string; width: number; height: number }) => void;
+    fail: (err: any) => void;
+  }): Promise<{ path: string; width: number; height: number }>;
 }
 
 let _scrollLocked = false;
@@ -188,6 +201,34 @@ export function createTaroAdapter(taro: TaroInstance): PlatformAdapter {
       },
       async navigateBack(delta = 1) {
         await taro.navigateBack({ delta });
+      },
+    },
+
+    canvas: {
+      createContext(width: number, height: number) {
+        const canvasId = `h5-utils-poster-${Date.now()}`;
+        const ctx = taro.createCanvasContext(canvasId);
+        return { canvas: { canvasId, width, height }, ctx, canvasId };
+      },
+      async toImage(canvas: any, options?: { quality?: number }) {
+        const res = await new Promise<{ tempFilePath: string }>((resolve, reject) => {
+          taro.canvasToTempFilePath({
+            canvasId: canvas.canvasId,
+            canvas,
+            quality: options?.quality,
+            success: resolve,
+            fail: reject,
+          });
+        });
+        return res.tempFilePath;
+      },
+      async loadImage(src: string) {
+        const res = await new Promise<{ path: string; width: number; height: number }>(
+          (resolve, reject) => {
+            taro.getImageInfo({ src, success: resolve, fail: reject });
+          },
+        );
+        return res;
       },
     },
   };

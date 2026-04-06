@@ -13,6 +13,9 @@ export type {
   DeviceAdapter,
   DeviceInfo,
   NavigationAdapter,
+  CanvasAdapter,
+  GradientConfig,
+  ShadowConfig,
 } from './types';
 
 let currentAdapter: PlatformAdapter | null = null;
@@ -160,6 +163,33 @@ function createNativeAdapter(native: any): PlatformAdapter {
       },
       async navigateBack(delta = 1) {
         await native.navigateBack({ delta });
+      },
+    },
+    canvas: {
+      createContext(width: number, height: number) {
+        const canvasId = `h5-utils-poster-${Date.now()}`;
+        const ctx = native.createCanvasContext(canvasId);
+        return { canvas: { canvasId, width, height }, ctx, canvasId };
+      },
+      async toImage(canvas: any, options?: { quality?: number }) {
+        const res = await new Promise<{ tempFilePath: string }>((resolve, reject) => {
+          native.canvasToTempFilePath({
+            canvasId: canvas.canvasId,
+            canvas,
+            quality: options?.quality,
+            success: resolve,
+            fail: reject,
+          });
+        });
+        return res.tempFilePath;
+      },
+      async loadImage(src: string) {
+        const res = await new Promise<{ path: string; width: number; height: number }>(
+          (resolve, reject) => {
+            native.getImageInfo({ src, success: resolve, fail: reject });
+          },
+        );
+        return res;
       },
     },
   };
