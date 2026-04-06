@@ -18,6 +18,11 @@ export interface PosterConfig {
   backgroundColor?: string;
   backgroundGradient?: GradientConfig;
   backgroundImage?: string;
+  /**
+   * 图片代理地址，解决跨域问题
+   * 使用 {url} 作为占位符，如: https://proxy.example.com?url={url}
+   */
+  imageProxy?: string;
   elements: PosterElement[];
 }
 
@@ -94,11 +99,31 @@ export interface LineElement {
 
 // ==================== 绘制实现 ====================
 
+/** 代理图片 URL */
+function proxyUrl(src: string, proxy?: string): string {
+  if (!proxy) return src;
+  return proxy.replace('{url}', encodeURIComponent(src));
+}
+
+/**
+ * 将图片 URL 转为 base64（仅 H5 可用，需要图片支持 CORS 或同域）
+ */
+export async function imageToBase64(url: string): Promise<string> {
+  const res = await fetch(url);
+  const blob = await res.blob();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
 /** 绘制背景 */
 async function drawBackground(ctx: any, config: PosterConfig, adapter: any): Promise<void> {
   // 背景图优先
   if (config.backgroundImage) {
-    const img = await adapter.loadImage(config.backgroundImage);
+    const img = await adapter.loadImage(proxyUrl(config.backgroundImage, config.imageProxy));
     if (img) {
       ctx.drawImage(img, 0, 0, config.width, config.height);
       return;
@@ -244,8 +269,8 @@ function drawLine(ctx: any, el: LineElement): void {
 }
 
 /** 绘制图片元素 */
-async function drawImage(ctx: any, el: ImageElement, adapter: any): Promise<void> {
-  const img = await adapter.loadImage(el.src);
+async function drawImage(ctx: any, el: ImageElement, adapter: any, proxy?: string): Promise<void> {
+  const img = await adapter.loadImage(proxyUrl(el.src, proxy));
   if (!img) return;
 
   ctx.save();
@@ -389,7 +414,7 @@ export function drawPoster(config: PosterConfig): Promise<string> {
             drawText(ctx, el);
             break;
           case 'image':
-            await drawImage(ctx, el, adapter.canvas);
+            await drawImage(ctx, el, adapter.canvas, config.imageProxy);
             break;
         }
       }
