@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.16 (2026-04-06)
+
+feat:增加readme
+
 ## v1.2.15 (2026-04-06)
 
 feat:change version
