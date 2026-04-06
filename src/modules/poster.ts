@@ -44,7 +44,13 @@ export interface QrcodeElement {
 }
 
 /** 海报元素联合类型 */
-export type PosterElement = ImageElement | TextElement | RectElement | CircleElement | LineElement | QrcodeElement;
+export type PosterElement =
+  | ImageElement
+  | TextElement
+  | RectElement
+  | CircleElement
+  | LineElement
+  | QrcodeElement;
 
 /** 图片元素 */
 export interface ImageElement {
@@ -501,8 +507,17 @@ export function drawPoster(config: PosterConfig): Promise<string> {
       if (typeof ctx.draw === 'function') {
         await new Promise<void>((resolve) => {
           let done = false;
-          const finish = () => { if (!done) { done = true; resolve(); } };
-          try { ctx.draw(true, finish); } catch { finish(); }
+          const finish = () => {
+            if (!done) {
+              done = true;
+              resolve();
+            }
+          };
+          try {
+            ctx.draw(true, finish);
+          } catch {
+            finish();
+          }
           setTimeout(finish, 3000);
         });
       }

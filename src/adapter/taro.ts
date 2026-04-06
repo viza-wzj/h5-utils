@@ -230,8 +230,14 @@ export function createTaroAdapter(taro: TaroInstance): PlatformAdapter {
             canvasId: canvas.canvasId,
             canvas,
             quality: options?.quality,
-            success: (r: any) => { clearTimeout(timer); resolve(r); },
-            fail: (e: any) => { clearTimeout(timer); reject(e); },
+            success: (r: any) => {
+              clearTimeout(timer);
+              resolve(r);
+            },
+            fail: (e: any) => {
+              clearTimeout(timer);
+              reject(e);
+            },
           });
         });
         return res.tempFilePath;
