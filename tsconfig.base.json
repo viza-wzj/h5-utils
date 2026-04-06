@@ -3,16 +3,10 @@
     "target": "ES2018",
     "module": "ESNext",
     "lib": ["ES2021", "DOM", "DOM.Iterable"],
-    "declaration": false,
     "strict": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "outDir": "dist",
-    "rootDir": "src",
-    "sourceMap": true
-  },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist"]
+    "forceConsistentCasingInFileNames": true
+  }
 }

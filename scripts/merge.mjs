@@ -1,13 +1,17 @@
 import { execSync } from 'child_process';
 import { readFileSync } from 'fs';
+import { resolve } from 'path';
 
-const pkg = JSON.parse(readFileSync('package.json', 'utf-8'));
+const ROOT = resolve(import.meta.dirname, '..');
+const CORE_PKG = resolve(ROOT, 'packages/core/package.json');
+
+const pkg = JSON.parse(readFileSync(CORE_PKG, 'utf-8'));
 const version = pkg.version;
 
 const [, , arg] = process.argv;
 
-function run(cmd) {
-  execSync(cmd, { stdio: 'inherit' });
+function run(cmd, opts) {
+  execSync(cmd, { stdio: 'inherit', ...opts });
 }
 
 function runQuiet(cmd) {
@@ -50,7 +54,7 @@ function main() {
 
   // 1. 格式化 + 构建
   console.log('\n  [1/5] 格式化代码...');
-  run('pnpm prettier --write "src/**/*.ts"');
+  run('pnpm prettier --write "packages/core/src/**/*.ts"');
 
   console.log('\n  [2/5] 构建项目...');
   run('pnpm run build');
@@ -58,7 +62,6 @@ function main() {
   // 2. 确保 main 分支存在
   console.log('\n  [3/5] 合并 develop → main...');
   if (!branchExists('main')) {
-    // main 不存在，从当前 develop 创建
     run('git checkout -b main');
     run('git checkout develop');
   }
@@ -70,7 +73,7 @@ function main() {
   } catch {
     console.error('\n  ❌ 合并冲突! 请手动解决:');
     console.error('     git add . && git commit');
-    console.error('     然后重新运行 npm run merge\n');
+    console.error('     然后重新运行 pnpm run merge\n');
     process.exit(1);
   }
 

@@ -1,7 +1,7 @@
 const path = require('path');
 
 const h5UtilsRoot = path.resolve(__dirname, '../../..');
-const h5UtilsDist = path.resolve(h5UtilsRoot, 'dist/index.esm.js');
+const h5UtilsDist = path.resolve(h5UtilsRoot, 'packages/core/dist/index.esm.js');
 
 /** @type {import('@tarojs/cli').UserConfigExport} */
 const config = {
