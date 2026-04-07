@@ -1,0 +1,25 @@
+.page { padding-bottom: 40px; font-size: 17px; }
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 12px;
+  gap: 8px;
+  background: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.tab {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 16px;
+  background: #f0f0f5;
+  color: #666;
+  &.active {
+    background: #6c5ce7;
+    color: #fff;
+  }
+}
