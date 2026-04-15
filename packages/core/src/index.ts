@@ -17,7 +17,14 @@ export type {
 } from './adapter';
 
 // URL 模块
-export { parseUrl, buildUrl, getQueryParam, getAllQueryParams } from './modules/url';
+export {
+  parseUrl,
+  buildUrl,
+  getQueryParam,
+  getAllQueryParams,
+  getQueryParamFromUrl,
+  getAllQueryParamsFromUrl,
+} from './modules/url';
 export type { ParsedUrl } from './modules/url';
 
 // Storage 模块
@@ -57,7 +64,8 @@ export {
 } from './modules/dom';
 
 // Event 模块
-export { on, off, once, delegate } from './modules/event';
+export { onEvent, offEvent, onceEvent, emitEvent, on, off, once, delegate } from './modules/event';
+export type { EventHandler } from './modules/event';
 
 // Clipboard 模块
 export { copyText, readText } from './modules/clipboard';

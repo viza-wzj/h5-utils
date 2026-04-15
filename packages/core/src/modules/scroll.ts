@@ -19,7 +19,7 @@ export function scrollToTop(smooth = true): void {
 }
 
 /**
- * 滚动到指定元素
+ * 滚动到指定元素（H5 专用）
  */
 export function scrollToElement(
   el: Element,
@@ -27,6 +27,9 @@ export function scrollToElement(
 ): void {
   safeCall(
     () => {
+      if (typeof window === 'undefined' || typeof el.getBoundingClientRect !== 'function') {
+        throw new Error('scrollToElement is only available in browser DOM environments');
+      }
       const { offset = 0, smooth = true } = options;
       const rect = el.getBoundingClientRect();
       const top = window.scrollY + rect.top + offset;

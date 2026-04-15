@@ -10,6 +10,7 @@ import ValidatorTab from '../../components/ValidatorTab';
 import ClipboardTab from '../../components/ClipboardTab';
 import ScrollTab from '../../components/ScrollTab';
 import RouterTab from '../../components/RouterTab';
+import EventTab from '../../components/EventTab';
 import './index.scss';
 
 const TABS = [
@@ -20,6 +21,7 @@ const TABS = [
   { key: 'device', label: '设备' },
   { key: 'format', label: '格式化' },
   { key: 'validator', label: '校验' },
+  { key: 'event', label: '事件' },
   { key: 'clipboard', label: '剪贴板' },
   { key: 'scroll', label: '滚动' },
   { key: 'router', label: '路由' },
@@ -55,6 +57,7 @@ export default function Demo() {
       {tab === 'device' && <DeviceTab {...tabProps} />}
       {tab === 'format' && <FormatTab {...tabProps} />}
       {tab === 'validator' && <ValidatorTab {...tabProps} />}
+      {tab === 'event' && <EventTab {...tabProps} />}
       {tab === 'clipboard' && <ClipboardTab {...tabProps} />}
       {tab === 'scroll' && <ScrollTab {...tabProps} />}
       {tab === 'router' && <RouterTab {...tabProps} />}

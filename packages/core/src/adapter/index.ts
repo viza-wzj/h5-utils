@@ -1,5 +1,6 @@
 import type { PlatformAdapter } from './types';
 import { browserAdapter } from './browser';
+import { createEventEmitterAdapter } from './event-emitter';
 import { createTaroAdapter } from './taro';
 import { appendUrlParams } from '../utils';
 
@@ -78,9 +79,7 @@ function createNativeAdapter(native: any): PlatformAdapter {
       },
     },
     event: {
-      on(): void {},
-      off(): void {},
-      emit(): void {},
+      ...createEventEmitterAdapter(),
     },
     dom: {
       select(): null {

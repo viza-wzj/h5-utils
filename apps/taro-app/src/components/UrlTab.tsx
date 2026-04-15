@@ -1,12 +1,20 @@
 import { useState } from 'react';
 import { View, Text, Input, Textarea, Button } from '@tarojs/components';
-import { parseUrl, buildUrl, getQueryParam, getAllQueryParams } from '@i17hush/h5-utils';
+import {
+  parseUrl,
+  buildUrl,
+  getQueryParam,
+  getAllQueryParams,
+  getQueryParamFromUrl,
+  getAllQueryParamsFromUrl,
+} from '@i17hush/h5-utils';
 import './common.scss';
 
 export default function UrlTab({ onResult, result }: { onResult: (msg: string) => void; result: string }) {
   const [urlInput, setUrlInput] = useState('https://example.com/path?name=test&age=18');
   const [buildBase, setBuildBase] = useState('https://example.com/api');
   const [buildParams, setBuildParams] = useState('{"page":1,"size":10}');
+  const [queryKey, setQueryKey] = useState('name');
 
   return (
     <View className="section">
@@ -32,7 +40,30 @@ export default function UrlTab({ onResult, result }: { onResult: (msg: string) =
         </Button>
       </View>
       <View className="card">
-        <Text className="title">当前页面参数</Text>
+        <Text className="title">任意 URL 参数</Text>
+        <Input value={queryKey} onInput={(e) => setQueryKey(e.detail.value)} className="input" />
+        <View className="btn-row">
+          <Button
+            onClick={() =>
+              onResult(
+                JSON.stringify(
+                  {
+                    key: queryKey,
+                    value: getQueryParamFromUrl(urlInput, queryKey),
+                    all: getAllQueryParamsFromUrl(urlInput),
+                  },
+                  null,
+                  2,
+                ),
+              )
+            }
+          >
+            提取参数
+          </Button>
+        </View>
+      </View>
+      <View className="card">
+        <Text className="title">当前页面参数（H5）</Text>
         <Button
           onClick={() =>
             onResult(

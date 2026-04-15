@@ -2,7 +2,13 @@ import { View, Text, Button } from '@tarojs/components';
 import { navigateTo, navigateBack } from '@i17hush/h5-utils';
 import './common.scss';
 
-export default function RouterTab({ onResult, result }: { onResult: (msg: string) => void; result: string }) {
+export default function RouterTab({
+  onResult: _onResult,
+  result,
+}: {
+  onResult: (msg: string) => void;
+  result: string;
+}) {
   return (
     <View className="section">
       <View className="card">

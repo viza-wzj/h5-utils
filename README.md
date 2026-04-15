@@ -20,16 +20,26 @@ getQueryParam('id');                  // URL 中 id 参数值
 
 ## 功能模块
 
-### URL - `parseUrl` `buildUrl` `getQueryParam` `getAllQueryParams`
+### URL - `parseUrl` `buildUrl` `getQueryParamFromUrl` `getAllQueryParamsFromUrl` `getQueryParam` `getAllQueryParams`
 
 ```typescript
-import { parseUrl, buildUrl, getQueryParam, getAllQueryParams } from '@i17hush/h5-utils';
+import {
+  parseUrl,
+  buildUrl,
+  getQueryParamFromUrl,
+  getAllQueryParamsFromUrl,
+  getQueryParam,
+  getAllQueryParams,
+} from '@i17hush/h5-utils';
 
 parseUrl('https://example.com/path?foo=bar#hash');
 // { protocol: 'https:', host: 'example.com', pathname: '/path', query: { foo: 'bar' }, hash: '#hash', ... }
 
 buildUrl('https://example.com/api', { page: 1, size: 10 });
 // 'https://example.com/api?page=1&size=10'
+
+getQueryParamFromUrl('https://example.com?id=1', 'id'); // '1'
+getAllQueryParamsFromUrl('https://example.com?a=1&b=2'); // { a: '1', b: '2' }
 
 getAllQueryParams(); // 获取当前页面所有查询参数
 ```
@@ -77,11 +87,19 @@ $$<HTMLElement>('.item').forEach(item => addClass(item, 'active'));
 isInViewport(el); // 元素是否在可视区域内
 ```
 
-### Event - `on` `off` `once` `delegate`
+### Event - `onEvent` `offEvent` `onceEvent` `emitEvent` `on` `off` `once` `delegate`
 
 ```typescript
-import { on, off, once, delegate } from '@i17hush/h5-utils';
+import { onEvent, offEvent, onceEvent, emitEvent, on, off, once, delegate } from '@i17hush/h5-utils';
 
+// 跨端自定义事件
+const onLogin = (user) => console.log(user);
+onEvent('user:login', onLogin);
+emitEvent('user:login', { id: 1 });
+onceEvent('toast', (message) => console.log(message));
+offEvent('user:login', onLogin);
+
+// DOM 事件（H5 专用）
 const handler = (e: Event) => console.log(e);
 on(window, 'resize', handler);
 off(window, 'resize', handler);
@@ -109,7 +127,7 @@ import { scrollToTop, scrollToElement, lockScroll, unlockScroll } from '@i17hush
 
 scrollToTop();                                    // 平滑滚到顶部
 scrollToTop(false);                               // 立即滚到顶部
-scrollToElement(el, { offset: -50 });             // 滚动到元素位置，偏移 -50px
+scrollToElement(el, { offset: -50 });             // H5 中滚动到元素位置，偏移 -50px
 lockScroll();                                     // 锁定页面滚动
 unlockScroll();                                   // 解锁页面滚动
 ```
@@ -135,7 +153,7 @@ import { isMobilePhone, isEmail, isIdCard, isUrl, isChinese } from '@i17hush/h5-
 
 isMobilePhone('13812345678'); // true
 isEmail('a@b.com');           // true
-isIdCard('110101199001011234'); // true（含校验位验证）
+isIdCard('11010519491231002X'); // true（含校验位验证）
 isUrl('https://example.com'); // true
 isChinese('你好');             // true
 ```
@@ -181,12 +199,12 @@ scrollToTop();
 |------|:---:|:----:|------|
 | **Storage** | ✅ | ✅ | 过期时间、JSON 自动序列化 |
 | **Clipboard** | ✅ | ✅ | 复制/读取文本 |
-| **Scroll** | ✅ | ✅ | 滚动到顶部/位置 |
+| **Scroll** | ✅ | ✅ | `scrollToTop` 跨端；元素滚动依赖 DOM |
 | **Device** | ✅ | ✅ | 设备检测、系统信息 |
-| **Event** | ✅ | ✅ | 自定义事件（Taro 使用 eventCenter） |
+| **Event** | ✅ | ✅ | `onEvent/offEvent/emitEvent` 跨端；DOM 事件 API 仅 H5 |
 | **Format** | ✅ | ✅ | 纯函数，无平台依赖 |
 | **Validator** | ✅ | ✅ | 纯函数，无平台依赖 |
-| **URL** | ✅ | ⚠️ | `getQueryParam`/`getAllQueryParams` 在小程序中不可用 |
+| **URL** | ✅ | ⚠️ | `parseUrl/buildUrl/*FromUrl` 可跨端，当前页面读取 API 仅 H5 |
 | **Cookie** | ✅ | ❌ | 小程序无 Cookie，仅 H5 可用 |
 | **DOM** | ✅ | ❌ | 小程序无 DOM，仅 H5 可用 |
 
@@ -194,6 +212,7 @@ scrollToTop();
 
 ```bash
 npm run build      # 生成 ESM + CJS + 类型声明
+npm run test       # 运行 core 回归测试
 npm run typecheck  # TypeScript 类型检查
 ```
 

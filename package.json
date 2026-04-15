@@ -7,6 +7,7 @@
     "dev": "node scripts/dev.mjs",
     "dev:weapp": "node scripts/dev.mjs weapp",
     "format": "prettier --write \"packages/*/src/**/*.ts\"",
+    "test": "pnpm --filter @i17hush/h5-utils run test",
     "typecheck": "pnpm --filter @i17hush/h5-utils run typecheck",
     "merge": "node scripts/merge.mjs",
     "release": "node scripts/release.mjs",

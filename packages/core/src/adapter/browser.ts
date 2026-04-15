@@ -1,4 +1,5 @@
 import type { PlatformAdapter } from './types';
+import { createEventEmitterAdapter } from './event-emitter';
 import { appendUrlParams } from '../utils';
 
 /**
@@ -42,17 +43,7 @@ export const browserAdapter: PlatformAdapter = {
     },
   },
 
-  event: {
-    on(event: string, handler: (...args: any[]) => void): void {
-      window.addEventListener(event, handler as EventListener);
-    },
-    off(event: string, handler: (...args: any[]) => void): void {
-      window.removeEventListener(event, handler as EventListener);
-    },
-    emit(event: string, ...args: any[]): void {
-      window.dispatchEvent(new CustomEvent(event, { detail: args }));
-    },
-  },
+  event: createEventEmitterAdapter(),
 
   dom: {
     select(selector: string): Element | null {
